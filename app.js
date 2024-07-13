@@ -1,11 +1,13 @@
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs').promises;
+require('dotenv').config();
 
 const videoPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7', 'video', 'sample-video.mp4');
 const audioPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7', 'audio');
 const directoryAudioPath = path.join(__dirname, 'audio');
 
+const API_KEY = process.env.API_KEY // clave de emision de youtube
 
 // obtener un array con los nombres de todos los archivos de la carpeta audio
 
