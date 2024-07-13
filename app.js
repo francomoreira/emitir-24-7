@@ -3,8 +3,7 @@ const path = require('path');
 const fs = require('fs').promises;
 require('dotenv').config();
 
-const videoPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7', 'video', 'sample-video.mp4');
-const audioPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7', 'audio');
+const videoPath = path.join(__dirname, 'video', 'sample-video.mp4');
 const directoryAudioPath = path.join(__dirname, 'audio');
 
 const API_KEY = process.env.API_KEY // clave de emision de youtube
@@ -35,9 +34,7 @@ function getNextAudioFile() {
         console.log('No audio files found in the directory.');
         return null;
     }
-
-    // Selecciona el primer archivo (puedes cambiar la lógica si lo deseas)
-    const audioFile = path.join(audioPath, arraySongs[0]);
+    const audioFile = path.join(directoryAudioPath, arraySongs[0]); // Selecciona el primer archivo (puedes cambiar la lógica si lo deseas)
     return audioFile;
 }
 
