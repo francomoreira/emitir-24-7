@@ -1,20 +1,67 @@
 const { exec } = require('child_process');
 const path = require('path');
+const fs = require('fs').promises;
+
+const videoPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7', 'video', 'sample-video.mp4');
+const audioPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7', 'audio');
+const directoryAudioPath = path.join(__dirname, 'audio');
 
 
-const videoPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7-stream', 'video', 'sample-video.mp4');
-const audioPath = path.join('D:', 'hidog', 'Documents', 'GitHub', 'emitir-24-7-stream', 'audio', 'sample-audio.aac');
+// obtener un array con los nombres de todos los archivos de la carpeta audio
 
-// comadno a ejecutar
+let arraySongs = [];
 
-const comando = `ffmpeg -stream_loop -1 -re -i ${videoPath} -re -i ${audioPath} -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -f flv -rtmp_buffer 100 rtmp://a.rtmp.youtube.com/live2/r94z-dy45-hx0d-8m0g-115y`
+// Función para actualizar el array de nombres de archivos periódicamente
+async function updateAudioFiles() {
+    try {
+        const files = await fs.readdir(directoryAudioPath);
+        arraySongs = files;
+        console.log('Updated audio files:', arraySongs);
+    } catch (err) {
+        console.log(`Unable to scan directory: ${err}`);
+    }
+}
+
+// Actualizar los nombres de los archivos cada minuto
+setInterval(updateAudioFiles, 60000); // Actualizar cada 60 segundos
+updateAudioFiles(); // Actualización inicial
 
 
-exec(comando, (error, stdout, stderr) => {
-    if (error) { //  maneja cualquier error que pueda ocurrir durante la ejecución del comando.
-        console.error(`errosin jeje: ${error}`);
-        return;
-    } 
-    console.log(`salida estandar: ${stdout}`); // captura la salida estándar del comando (si la hay)
-    console.error(`salida de error: ${stderr}`); // captura la salida de error del comando (si la hay).
-});
+// Función para obtener un nuevo archivo de audio y construir el comando ffmpeg
+function getNextAudioFile() {
+    if (arraySongs.length === 0) {
+        console.log('No audio files found in the directory.');
+        return null;
+    }
+
+    // Selecciona el primer archivo (puedes cambiar la lógica si lo deseas)
+    const audioFile = path.join(audioPath, arraySongs[0]);
+    return audioFile;
+}
+
+// Función para ejecutar ffmpeg con el archivo de audio actual
+function startFfmpeg() {
+    const newAudio = getNextAudioFile();
+    if (!newAudio) return;
+
+    const comando = `ffmpeg -stream_loop -1 -re -i ${videoPath} -re -i ${newAudio} -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -f flv -rtmp_buffer 100 rtmp://a.rtmp.youtube.com/live2/${API_KEY}`
+
+    // Ejecutar el comando ffmpeg
+    const ffmpegProcess = exec(comando, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error: ${error}`);
+            return;
+        }
+        console.log(`Salida estándar: ${stdout}`);
+        console.error(`Salida de error: ${stderr}`);
+    });
+
+    // Manejar la terminación del proceso ffmpeg
+    ffmpegProcess.on('exit', (code, signal) => {
+        console.log(`FFmpeg process exited with code ${code} and signal ${signal}`);
+        startFfmpeg(); // Reiniciar ffmpeg después de que termine
+    });
+}
+
+// Iniciar ffmpeg
+startFfmpeg();
